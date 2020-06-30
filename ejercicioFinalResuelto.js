@@ -56,23 +56,30 @@ const showData = (data) => {
   });
 };
 
-
-
 (async () => {
   try {
-    const batmanData = await getSearching("batman");
-    const supermanData = await getSearching("superman");
-    await saveFile(setNamingFile("batman"), JSON.stringify(batmanData.data));
+    //Optimizar. Estas request se están produciendo en serie cuando en realidad no es necesario, podrían trabajar paralelo.
+    //const batmanData = await getSearching("batman");
+    //const supermanData = await getSearching("superman");
+
+    const responses = await Promise.all([
+      getSearching("batman"),
+      getSearching("superman"),
+    ]);
+
+    await saveFile(setNamingFile("batman"), JSON.stringify(responses[0].data));
     await saveFile(
       setNamingFile("superman"),
-      JSON.stringify(supermanData.data)
+      JSON.stringify(responses[1].data)
     );
+
     const fileBatman = await getFile("series.batman.json");
     const fileSuperman = await getFile("series.superman.json");
     const sortedData = sortData([...fileBatman, ...fileSuperman]);
+    //showData se registra síncronamente, aunque luego llame al seTimeout
     showData(sortedData);
     console.log("FIN");
   } catch (error) {
-    console.log(error, error.data.status);
+    console.log(error, "Errorrrrrr");
   }
 })();
